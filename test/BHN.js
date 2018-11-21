@@ -2,19 +2,19 @@ var BHN = artifacts.require("BHN");
 
 //contract('BHN', function(accounts) {
 contract('BHN', (accounts) => {
-    it ("Test #1: configuration test", function() {
+    // let inst;
+    // beforeEach (async () => {
+    //     contract = await BHN.new()
+    //  })
+
+    it ("Test #0: configuration test", function() {
         assert.equal(8, 8);
     });
 
-  // let inst;
-  // beforeEach (async () => {
-  //     contract = await BHN.new()
-  //  })
-
-
-    it ("Test #2: transaction test", async () => {
+    it ("Test #1: transaction test", async () => {
     // it ("Test #2", async function () {
          let contract = await BHN.new ({from: accounts[1]});
+         //let contract = await BHN.deployed();
          //let contract = await BHN.new ();
          let amount = web3.toWei(1, 'ether');
          //let amount = 0;
@@ -40,19 +40,13 @@ contract('BHN', (accounts) => {
         console.log("Origin: " + tx.origin);
         //console.log("Transaction hash: ",  tx.transactionHash); // undefined
         console.log("Transaction hash: ",  tx.hash); // OK
-        console.log("Block number: ",  tx.blockNumber); 
+        console.log("Block number: ",  tx.blockNumber);
         console.log("Transaction: ",  tx); // all in increamentCounter
-
 
         let count = await contract.count.call();
         console.log("Counter: ", count.toNumber());
 
-        //let owner = await contract.owner.call();
-        //console.log("Owner: ", owner);
-
         let sender = await contract.sender.call();
         console.log("Sender: ", sender);
-
     });
-
 });
