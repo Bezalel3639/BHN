@@ -1,4 +1,5 @@
 var BHN = artifacts.require("BHN");
+//var BHN = artifacts.require("./BHN.sol");
 
 //contract('BHN', function(accounts) {
 contract('BHN', (accounts) => {
@@ -13,8 +14,8 @@ contract('BHN', (accounts) => {
 
     it ("Test #1: transaction test", async () => {
     // it ("Test #2", async function () {
-         let contract = await BHN.new ({from: accounts[1]});
-         //let contract = await BHN.deployed();
+         //let contract = await BHN.new ({from: accounts[1]});
+         let contract = await BHN.deployed(); // OK
          //let contract = await BHN.new ();
          let amount = web3.toWei(1, 'ether');
          //let amount = 0;
@@ -48,5 +49,12 @@ contract('BHN', (accounts) => {
 
         let sender = await contract.sender.call();
         console.log("Sender: ", sender);
+        console.log("Contract address: ", contract.address);
+    });
+
+    it ("Test #3: base class variable should be readable (visibility test)", async () => {
+         let contract = await BHN.deployed();
+         let teststring = await contract.teststring.call();
+         console.log("Test: ", teststring);
     });
 });
