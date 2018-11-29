@@ -4,13 +4,18 @@ pragma solidity ^0.4.24;
 contract ERC20Interface {
     function totalSupply() public view returns (uint256);
     function balanceOf(address _owner) public view returns (uint256);
-    function transfer(address _to, uint256 _value) public returns (bool success);
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
-    function approve(address _spender, uint256 _value) public returns (bool success);
-    function allowance(address _owner, address _spender) public view returns (uint256 remaining);
+    function transfer(address _to, uint256 _value)
+                                                  public returns (bool success);
+    function transferFrom(address _from, address _to, uint256 _value)
+                                                  public returns (bool success);
+    function approve(address _spender, uint256 _value)
+                                                  public returns (bool success);
+    function allowance(address _owner, address _spender)
+                                        public view returns (uint256 remaining);
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender,
+                                                                uint256 _value);
 }
 
 contract ERC20Token is ERC20Interface {
@@ -19,7 +24,9 @@ contract ERC20Token is ERC20Interface {
     mapping (address => mapping (address => uint256)) public allowances;
     mapping (address => uint256) public balances;
 
-    //event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender,
+                                                                uint256 _value);
 
     constructor() public {
         balances[tx.origin] = 144000000; // 144M
@@ -29,11 +36,13 @@ contract ERC20Token is ERC20Interface {
         return balances[tx.origin];
     }
 
-    function balanceOf (address _address) constant public returns (uint256 balance){
+    function balanceOf (address _address) public view
+                                                     returns (uint256 balance) {
         return balances[_address];
     }
 
-    function transfer(address _to, uint256 _value) public returns(bool success) {
+    function transfer(address _to, uint256 _value) public
+                                                         returns(bool success) {
         require(balanceOf(msg.sender) >= _value);
 
         balances[msg.sender] -= _value;
@@ -42,7 +51,8 @@ contract ERC20Token is ERC20Interface {
         return true;
     }
 
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _value) public
+                                                        returns (bool success) {
         balances[msg.sender] -= _value;
         balances[_to] += _value;
         allowances[_from][msg.sender] -= _value;
@@ -50,13 +60,15 @@ contract ERC20Token is ERC20Interface {
         return true;
     }
 
-    function approve (address _spender, uint256 _value) public returns (bool success) {
+    function approve (address _spender, uint256 _value) public
+                                                        returns (bool success) {
         allowances[msg.sender][_spender] = _value;
 
         return true;
     }
 
-    function allowance (address _owner, address _spender) public view returns (uint256 remaining) {
+    function allowance (address _owner, address _spender) public view
+                                                   returns (uint256 remaining) {
         return allowances[_owner][_spender];
     }
 }

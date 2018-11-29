@@ -22,7 +22,8 @@ contract('BHN', (accounts) => {
          let buyer = accounts [2];
         //
         let balanceBefore = web3.eth.getBalance(buyer);
-        let hash = await contract.buy.sendTransaction({from: buyer, value: amount});
+        let hash = await contract.buy.sendTransaction({from: buyer,
+                                                                value: amount});
         let balanceAfter = web3.eth.getBalance(buyer);
         //
         let tx = await web3.eth.getTransaction(hash);
@@ -52,9 +53,43 @@ contract('BHN', (accounts) => {
         console.log("Contract address: ", contract.address);
     });
 
-    it ("Test #3: base class variable should be readable (visibility test)", async () => {
+    it ("Test #3: base class variable should be readable (visibility test)",
+                                                                   async () => {
          let contract = await BHN.deployed();
          let teststring = await contract.teststring.call();
          console.log("Test: ", teststring);
+    });
+
+    it ("Test #5: total supply should be 144M tokens", async () => {
+         let contract = await BHN.deployed();
+         let totalSupply = await contract.totalSupply.call();
+         console.log("Total supply: ", totalSupply.toNumber());
+         assert.equal(totalSupply.toNumber(), 144000000,
+                                            "Total supply doesn't match 144M!");
+    });
+
+    it ("Test #6: check user balances", async () => {
+         let contract = await BHN.deployed();
+         let admin = accounts [0];
+         //let userBalance = await contract.balanceOf(user).call();
+         let userBalance = await contract.balanceOf(admin);
+         let balanceETH = web3.eth.getBalance(admin);
+         console.log("Admin address: ", admin);
+         console.log("Admin token balance: ", userBalance.toNumber());
+         console.log("Admin WEI balance: ", balanceETH.toNumber());
+         console.log("Admin ETH balance: ", balanceETH.toNumber() /
+                                        1000000000000000000); // 1TH = 10^18 Wei
+         assert.equal(userBalance.toNumber(), 144000000,
+                "Initial admin token balance should equal total supply, 144M!");
+
+         let user1 = accounts [1];
+         userBalance = await contract.balanceOf(user1);
+         console.log("User1 address: ", user1);
+         console.log("User1 token balance: ", userBalance.toNumber());
+
+         let user2 = accounts [2];
+         userBalance = await contract.balanceOf(user2);
+         console.log("User2 address: ", user2);
+         console.log("User2 token balance: ", userBalance.toNumber());
     });
 });
