@@ -119,4 +119,49 @@ contract('BHN', (accounts) => {
         console.log("User address: ", user1);
         console.log("User token balance: ", userBalance.toNumber());
     });
+
+    it ("Test #8: msg.owner and tx.origin", async () => {
+        let contract = await BHN.deployed();
+        let msgowner = await contract.test_msgsender_address.call();
+        console.log("msg.owner address", msgowner); // address[0]
+        // Ganache, accounts[0]: "0xFba047b6A2E0072F11441E69ec3c09A774a13cA4",
+        // but getter returns lowercase address.
+        assert.equal(msgowner, "0xfba047b6a2e0072f11441e69ec3c09a774a13ca4",
+                "The msg.owner address should be equal to the first Ganashe " +
+                                                                    "address!");
+
+        let txorigin = await contract.test_txorigin_address.call();
+        console.log("tx.origin address", txorigin) ; //address[0]
+        assert.equal(txorigin, "0xfba047b6a2e0072f11441e69ec3c09a774a13ca4",
+                "The txorigin address should be equal to the first Ganashe " +
+                                                                    "address!");
+    });
+
+    it ("Test #9: transfer tokens on behalf of admin", async () => {
+        let contract = await BHN.deployed();
+        let admin = accounts [0];
+        let user1 = accounts [1];
+        let user2 = accounts [2];
+
+        let adminBalance = await contract.balanceOf(admin);
+        let adminAllowance = await contract.allowance(admin, admin);
+        let user1Allowance = await contract.allowance(admin, user1);
+        console.log("Admin token balance: ", adminBalance);
+        console.log("Admin allowance: ", adminAllowance); // 0 [confirmes that it does not make sense for admin]
+        console.log("User1 allowance: ", user1Allowance); // 0
+
+        // Allow the user1 spend up to 1964 tokens.
+        let result = await contract.approve(user1, 1964);
+        // Verify that the user1 is allowed to spend up to 1964 tokens.
+        user1Allowance = await contract.allowance(admin, user1);
+        console.log("Admin allowance: ", adminAllowance); // 0 [confirmes that it does not make sense for admin]
+        console.log("User1 allowance: ", user1Allowance); // 0
+
+        // Not the user1 on behalf of admin sends 100 tokens to the user2.
+        result = await contract.transferFrom(user1, user2, 100);
+        user1Allowance = await contract.allowance(admin, user1);
+        let user2Balance = await contract.balanceOf(user2);
+        console.log("User1 allowance: ", user1Allowance);
+        console.log("User2 token balance: ", user2Balance);
+    });
 });

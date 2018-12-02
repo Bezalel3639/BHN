@@ -20,9 +20,11 @@ contract ERC20Interface {
 
 contract ERC20Token is ERC20Interface {
     string public teststring = "ERC20Token string";
+    address public test_msgsender_address;
+    address public test_txorigin_address;
 
-    mapping (address => mapping (address => uint256)) public allowances;
     mapping (address => uint256) public balances;
+    mapping (address => mapping (address => uint256)) public allowances;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender,
@@ -30,6 +32,8 @@ contract ERC20Token is ERC20Interface {
 
     constructor() public {
         balances[tx.origin] = 144000000; // 144M
+        test_msgsender_address = msg.sender;
+        test_txorigin_address = tx.origin;
     }
 
     function totalSupply() public view returns (uint256) {
@@ -55,9 +59,13 @@ contract ERC20Token is ERC20Interface {
 
     function transferFrom(address _from, address _to, uint256 _value) public
                                                         returns (bool success) {
-        balances[msg.sender] -= _value;
+        //balances[msg.sender] -= _valuebalances[msg.sender] -= _value;
+        balances[_from] -= _value;
         balances[_to] += _value;
-        allowances[_from][msg.sender] -= _value;
+        //allowances[_from][msg.sender] -= _value;
+        allowances[msg.sender][_from] -= _value;
+
+        emit Transfer(_from, _to, _value);
 
         return true;
     }
@@ -65,6 +73,8 @@ contract ERC20Token is ERC20Interface {
     function approve (address _spender, uint256 _value) public
                                                         returns (bool success) {
         allowances[msg.sender][_spender] = _value;
+
+        emit Approval(msg.sender, _spender, _value);
 
         return true;
     }
