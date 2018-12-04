@@ -146,22 +146,58 @@ contract('BHN', (accounts) => {
         let adminBalance = await contract.balanceOf(admin);
         let adminAllowance = await contract.allowance(admin, admin);
         let user1Allowance = await contract.allowance(admin, user1);
-        console.log("Admin token balance: ", adminBalance);
-        console.log("Admin allowance: ", adminAllowance); // 0 [confirmes that it does not make sense for admin]
-        console.log("User1 allowance: ", user1Allowance); // 0
+        console.log("Admin token balance: ", adminBalance.toNumber());
+        console.log("Admin allowance: ", adminAllowance.toNumber()); // 0 [confirms that it does not make sense for admin]
+        console.log("User1 allowance: ", user1Allowance.toNumber()); // 0
 
         // Allow the user1 spend up to 1964 tokens.
         let result = await contract.approve(user1, 1964);
         // Verify that the user1 is allowed to spend up to 1964 tokens.
         user1Allowance = await contract.allowance(admin, user1);
-        console.log("Admin allowance: ", adminAllowance); // 0 [confirmes that it does not make sense for admin]
-        console.log("User1 allowance: ", user1Allowance); // 0
+        console.log("Admin allowance: ", adminAllowance.toNumber()); // 0 [confirms that it does not make sense for admin]
+        console.log("User1 allowance: ", user1Allowance.toNumber()); // 0
 
-        // Not the user1 on behalf of admin sends 100 tokens to the user2.
+        // Now the user1 on behalf of admin sends 100 tokens to the user2.
         result = await contract.transferFrom(user1, user2, 100);
         user1Allowance = await contract.allowance(admin, user1);
         let user2Balance = await contract.balanceOf(user2);
-        console.log("User1 allowance: ", user1Allowance);
-        console.log("User2 token balance: ", user2Balance);
+        console.log("User1 allowance: ", user1Allowance.toNumber());
+        console.log("User2 token balance: ", user2Balance.toNumber());
+    });
+
+    it ("Test #10: buy tokens with payable function", async () => {
+        let contract = await BHN.deployed();
+        //let admin = accounts [0];
+        //let user1 = accounts [1];
+        //let user2 = accounts [2];
+
+        let amount = web3.toWei(1.5, 'ether');
+        let buyer = accounts [7];
+        let balanceBefore = web3.eth.getBalance(buyer);
+        console.log("Buyer :", buyer);
+        console.log("Balance before ", balanceBefore.toNumber() /
+                                     1000000000000000000); // 1ETH = 10^18 Wei);
+        let hash = await contract.buy.sendTransaction({from: buyer,
+                                                                value: amount});
+        let tx = await web3.eth.getTransaction(hash);
+        console.log("Transaction WEI amount: ", tx.value.toNumber());
+        console.log("To (contact address): ", tx.to);
+        //console.log("Buyer=msg.sender in this case :", tx.sender); // undefined
+        console.log("Buyer=msg.sender [should be, but undefined] in this case :", tx.from);
+
+        let tokenprice = await contract.tokensforoneether.call();
+        console.log("Token price: ", tokenprice.toNumber());
+        console.log("Tokens asked: ", (tx.value.toNumber() /
+                                  1000000000000000000) * tokenprice.toNumber());
+
+        let adminBalance = await contract.balanceOf(accounts[0]);
+        console.log("Admin balance: ", adminBalance.toNumber());
+        let buyerBalance = await contract.balanceOf(accounts[7]);
+        console.log("Buyer balance: ", buyerBalance.toNumber());
+
+        //let balanceAfter = web3.eth.getBalance(buyer);
     });
 });
+
+//let user1Balance = await contract.balanceOf(user1);
+//console.log("User1 balance: ", user1Balance);

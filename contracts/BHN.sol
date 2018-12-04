@@ -18,7 +18,19 @@ contract ERC20Interface {
                                                                 uint256 _value);
 }
 
-contract ERC20Token is ERC20Interface {
+contract TokenSettings {
+    string public name = "BHN Token";
+    string public symbol = "BHN";
+    uint256 public decimals = 18;
+    uint256 public hardcap = 144000000; // 144M
+    uint256 public tokensforoneether = 10;
+
+    // Dynamic.
+    uint256 public tokensSoldCount = 0;
+    uint256 public tokensAvailabeCount = 0; // init in constructor
+}
+
+contract ERC20Token is ERC20Interface, TokenSettings {
     string public teststring = "ERC20Token string";
     address public test_msgsender_address;
     address public test_txorigin_address;
@@ -31,7 +43,10 @@ contract ERC20Token is ERC20Interface {
                                                                 uint256 _value);
 
     constructor() public {
-        balances[tx.origin] = 144000000; // 144M
+        //TokenSettings ts = new TokenSettings(); // first run
+        //balances[tx.origin] = ts.hardcap();
+        balances[tx.origin] = hardcap;
+        tokensAvailabeCount = hardcap;
         test_msgsender_address = msg.sender;
         test_txorigin_address = tx.origin;
     }
@@ -59,6 +74,9 @@ contract ERC20Token is ERC20Interface {
 
     function transferFrom(address _from, address _to, uint256 _value) public
                                                         returns (bool success) {
+        require(_value > 0 && balanceOf(_from) >= _value);
+        require(allowances[msg.sender][_from] >= _value);
+
         //balances[msg.sender] -= _valuebalances[msg.sender] -= _value;
         balances[_from] -= _value;
         balances[_to] += _value;
@@ -88,16 +106,17 @@ contract ERC20Token is ERC20Interface {
 contract BHN is ERC20Token {
     int public count = 0;
     address public sender = msg.sender;
+    address admin;
 
     //string public teststr = teststring;
     //ERC20Token public token = new ERC20Token();
 
-    function increamentCounter () public {
-        count += 1;
+    constructor() public {
+        admin = msg.sender;
     }
 
-    function decreamentCounter () public {
-        count -= 1;
+    function increamentCounter () public {
+        count += 1;
     }
 
     function getCount () public view returns (int) {
@@ -105,5 +124,19 @@ contract BHN is ERC20Token {
     }
 
     function buy () public payable {
+        increamentCounter();
+        require (msg.value > 0);
+
+        uint256 weireceived = msg.value;
+        //  1000000000000000000 WEI (18 zeros) is 1 ETH.
+        uint256 tokens2sell = weireceived / 1000000000000000000
+                                                            / tokensforoneether;
+        balances[msg.sender] += tokens2sell;
+        emit Transfer(address(this), msg.sender, tokens2sell);
+
+        tokensSoldCount += tokens2sell;
+        tokensAvailabeCount -= tokens2sell;
+
+        admin.transfer(weireceived);
     }
 }
