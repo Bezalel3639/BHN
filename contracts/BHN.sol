@@ -27,7 +27,7 @@ contract TokenSettings {
 
     // Dynamic.
     uint256 public tokensSoldCount = 0;
-    uint256 public tokensAvailabeCount = 0; // init in constructor
+    uint256 public tokensAvailableCount = 0; // init in constructor
 }
 
 contract ERC20Token is ERC20Interface, TokenSettings {
@@ -46,7 +46,7 @@ contract ERC20Token is ERC20Interface, TokenSettings {
         //TokenSettings ts = new TokenSettings(); // first run
         //balances[tx.origin] = ts.hardcap();
         balances[tx.origin] = hardcap;
-        tokensAvailabeCount = hardcap;
+        tokensAvailableCount = hardcap;
         test_msgsender_address = msg.sender;
         test_txorigin_address = tx.origin;
     }
@@ -115,28 +115,28 @@ contract BHN is ERC20Token {
         admin = msg.sender;
     }
 
-    function increamentCounter () public {
-        count += 1;
-    }
-
-    function getCount () public view returns (int) {
-        return count;
-    }
-
     function buy () public payable {
         increamentCounter();
         require (msg.value > 0);
 
         uint256 weireceived = msg.value;
         //  1000000000000000000 WEI (18 zeros) is 1 ETH.
-        uint256 tokens2sell = weireceived / 1000000000000000000
-                                                            / tokensforoneether;
+        uint256 tokens2sell = (weireceived / 1000000000000000000) *
+                                                              tokensforoneether;
         balances[msg.sender] += tokens2sell;
         emit Transfer(address(this), msg.sender, tokens2sell);
 
         tokensSoldCount += tokens2sell;
-        tokensAvailabeCount -= tokens2sell;
+        tokensAvailableCount -= tokens2sell;
 
         admin.transfer(weireceived);
+    }
+
+    function increamentCounter () public {
+        count += 1;
+    }
+
+    function getCount () public view returns (int) {
+        return count;
     }
 }

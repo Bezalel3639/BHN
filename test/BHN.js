@@ -167,37 +167,60 @@ contract('BHN', (accounts) => {
 
     it ("Test #10: buy tokens with payable function", async () => {
         let contract = await BHN.deployed();
-        //let admin = accounts [0];
-        //let user1 = accounts [1];
-        //let user2 = accounts [2];
 
-        let amount = web3.toWei(1.5, 'ether');
         let buyer = accounts [7];
+        // Ganache, accounts[7]: "0x2e9E306A71737008C6710B55A7845fCa53e1541d",
+        // but getter returns lowercase address.
+        assert.equal(buyer, "0x2e9e306a71737008c6710b55a7845fca53e1541d",
+           "For clarity, the Ganashe index 7 account is used here" +
+                                                     " to test buying tokens!");
+        // Step 1: Check buyer balance.
         let balanceBefore = web3.eth.getBalance(buyer);
         console.log("Buyer :", buyer);
-        console.log("Balance before ", balanceBefore.toNumber() /
-                                     1000000000000000000); // 1ETH = 10^18 Wei);
+        console.log("Balance before: ", balanceBefore.toNumber() /
+                            1000000000000000000 + " ETH"); // 1ETH = 10^18 Wei);
+        /*
+        assert.equal(balanceBefore.toNumber() / 1000000000000000000, 100,
+              "For clarity, the balance of the buyer should be equal 100 ETH." +
+                                     "Restart Ganashe if the balance differs!");
+        */
+
+        // Step 2: Buy tokens for 1.5 ETH (or send 1.5 ETH to the contract
+        // address.
+        //let amount = web3.toWei(1.5, 'ether');
+        let amount = web3.toWei(3, 'ether');
         let hash = await contract.buy.sendTransaction({from: buyer,
                                                                 value: amount});
+        // Step 3: Examine transaction hash.
         let tx = await web3.eth.getTransaction(hash);
+        console.log("Transaction hash: ",  tx.hash);
         console.log("Transaction WEI amount: ", tx.value.toNumber());
+        /*
+        assert.equal(tx.value.toNumber(), 1500000000000000000,
+              "The WEI amount should be 1500000000000000000 WEI (or 1.5 ETH)!");
+        */
         console.log("To (contact address): ", tx.to);
         //console.log("Buyer=msg.sender in this case :", tx.sender); // undefined
-        console.log("Buyer=msg.sender [should be, but undefined] in this case :", tx.from);
-
+        console.log("From buyer :", tx.from);
+        assert.equal(tx.from,  "0x2e9e306a71737008c6710b55a7845fca53e1541d",
+                   "The Ganashe index 7 account should be used here as buyer!");
+        // Step 4: Verify token price (BHN/ETH).
         let tokenprice = await contract.tokensforoneether.call();
         console.log("Token price: ", tokenprice.toNumber());
+        assert.equal(tokenprice.toNumber(), 10, "The number of tokens for 1 " +
+                                                        "ETH differs from 10!");
+        // Step 5: Calculate the number of tokens.
         console.log("Tokens asked: ", (tx.value.toNumber() /
                                   1000000000000000000) * tokenprice.toNumber());
-
+        // Step 6: Verify balances after transaction.
         let adminBalance = await contract.balanceOf(accounts[0]);
         console.log("Admin balance: ", adminBalance.toNumber());
         let buyerBalance = await contract.balanceOf(accounts[7]);
         console.log("Buyer balance: ", buyerBalance.toNumber());
 
-        //let balanceAfter = web3.eth.getBalance(buyer);
+        let tokensSoldCount = await contract.tokensSoldCount.call();
+        let tokensAvailableCount = await contract.tokensAvailableCount.call();
+        console.log("ICO tokens sold: ", tokensSoldCount.toNumber());
+        console.log("ICO tokens available: ", tokensAvailableCount.toNumber());
     });
 });
-
-//let user1Balance = await contract.balanceOf(user1);
-//console.log("User1 balance: ", user1Balance);
