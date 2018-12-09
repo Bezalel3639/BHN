@@ -24,10 +24,17 @@ contract TokenSettings {
     uint256 public decimals = 18;
     uint256 public hardcap = 144000000; // 144M
     uint256 public tokensforoneether = 10;
+    string public version = "0.1";
+
+    uint256 public hardcap_wei = hardcap*10**18;
+    uint256 public tokenprice_wei = tokensforoneether*10**18;
 
     // Dynamic.
     uint256 public tokensSoldCount = 0;
     uint256 public tokensAvailableCount = 0; // init in constructor
+
+    uint256 public tokensSoldCount_wei = 0;
+    uint256 public tokensAvailableCount_wei = 0; // init in constructor
 }
 
 contract ERC20Token is ERC20Interface, TokenSettings {
@@ -44,15 +51,15 @@ contract ERC20Token is ERC20Interface, TokenSettings {
 
     constructor() public {
         //TokenSettings ts = new TokenSettings(); // first run
-        //balances[tx.origin] = ts.hardcap();
-        balances[tx.origin] = hardcap;
+        balances[msg.sender] = hardcap_wei;
         tokensAvailableCount = hardcap;
+        tokensAvailableCount_wei = hardcap_wei;
         test_msgsender_address = msg.sender;
         test_txorigin_address = tx.origin;
     }
 
     function totalSupply() public view returns (uint256) {
-        return balances[tx.origin];
+        return balances[msg.sender];
     }
 
     function balanceOf (address _address) public view
@@ -120,14 +127,30 @@ contract BHN is ERC20Token {
         require (msg.value > 0);
 
         uint256 weireceived = msg.value;
-        //  1000000000000000000 WEI (18 zeros) is 1 ETH.
-        uint256 tokens2sell = (weireceived / 1000000000000000000) *
-                                                              tokensforoneether;
+        uint256 tokens2sell = (weireceived * tokensforoneether) / 1 ether;
         balances[msg.sender] += tokens2sell;
         emit Transfer(address(this), msg.sender, tokens2sell);
 
         tokensSoldCount += tokens2sell;
         tokensAvailableCount -= tokens2sell;
+
+        admin.transfer(weireceived);
+    }
+
+    function buytokens() public payable {
+    //function () public payable {
+        increamentCounter();
+        require (msg.value > 0);
+
+        uint256 weireceived = msg.value;
+        //uint256 tokens2sell_wei = (weireceived*tokenprice_wei) / 1 ether; // (1 ether) also OK
+        uint256 tokens2sell_wei = (weireceived*tokenprice_wei) /
+                                                            1000000000000000000;
+        balances[msg.sender] += tokens2sell_wei;
+        emit Transfer(address(this), msg.sender, tokens2sell_wei);
+
+        tokensSoldCount_wei += tokens2sell_wei;
+        tokensAvailableCount_wei -= tokens2sell_wei; // init in constructor
 
         admin.transfer(weireceived);
     }

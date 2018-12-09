@@ -3,16 +3,16 @@ var BHN = artifacts.require("BHN");
 
 //contract('BHN', function(accounts) {
 contract('BHN', (accounts) => {
-    // let inst;
-    // beforeEach (async () => {
-    //     contract = await BHN.new()
-    //  })
+    let inst;
+    beforeEach (async () => {
+        contract = await BHN.new()
+     })
 
     it ("Test #0: configuration test", function() {
         assert.equal(8, 8);
     });
 
-    it ("Test #1: transaction test", async () => {
+    xit ("Test #1: transaction test", async () => {
     // it ("Test #2", async function () {
         //let contract = await BHN.new ({from: accounts[1]});
         let contract = await BHN.deployed(); // OK
@@ -165,7 +165,7 @@ contract('BHN', (accounts) => {
         console.log("User2 token balance: ", user2Balance.toNumber());
     });
 
-    it ("Test #10: buy tokens with payable function", async () => {
+    it ("Test #10: buy tokens with payable function (v1)", async () => {
         let contract = await BHN.deployed();
 
         let buyer = accounts [7];
@@ -189,6 +189,7 @@ contract('BHN', (accounts) => {
         // address.
         //let amount = web3.toWei(1.5, 'ether');
         let amount = web3.toWei(3, 'ether');
+        //let amount = 1000000; // zero tokens sold
         let hash = await contract.buy.sendTransaction({from: buyer,
                                                                 value: amount});
         // Step 3: Examine transaction hash.
@@ -220,6 +221,76 @@ contract('BHN', (accounts) => {
 
         let tokensSoldCount = await contract.tokensSoldCount.call();
         let tokensAvailableCount = await contract.tokensAvailableCount.call();
+        console.log("ICO tokens sold: ", tokensSoldCount.toNumber());
+        console.log("ICO tokens available: ", tokensAvailableCount.toNumber());
+
+        // Step 7: Buy again tokensSoldCount, tokensAvailableCount check)                                                       value: amount});
+        amount = web3.toWei(4.8, 'ether');
+        hash = await contract.buy.sendTransaction({from: buyer, value: amount});
+
+        tokensSoldCount = await contract.tokensSoldCount.call();
+        tokensAvailableCount = await contract.tokensAvailableCount.call();
+        console.log("ICO tokens sold: ", tokensSoldCount.toNumber());
+        console.log("ICO tokens available: ", tokensAvailableCount.toNumber());
+    });
+
+    it.only ("Test #11: buy tokens with fallback payable (v2)", async () => {
+        let contract = await BHN.deployed();
+
+        // Step 1: Check contract address (vs Ganache).
+        console.log("Contract address: ",  contract.address);
+
+        // Step 2: Check buyer balance.
+        console.log("Buyer :", accounts[8]);
+        console.log("Balance before: ",
+             web3.eth.getBalance(accounts[8]).toNumber()
+                                                / 1000000000000000000 + " ETH");
+
+        // Step 3: Send ETH to the contract address.
+        let hash = await contract.buytokens.sendTransaction({from: accounts[8],
+                                              value: web3.toWei(3.1111, 'ether')});
+        // Step 4: Examine transaction hash.
+        let tx = await web3.eth.getTransaction(hash);
+        let txr = await web3.eth.getTransactionReceipt(hash);
+        console.log("Transaction hash: ",  tx.hash);
+        console.log("Transaction WEI amount: ", tx.value.toNumber());
+        console.log("To (contact address): ", tx.to);
+        console.log("From buyer:", tx.from);
+
+        console.log("Gas used:", txr.gasUsed);
+        console.log("Gas price:", tx.gasPrice.toNumber());
+        //console.log("Gas limit:", tx.gasLimit); // undefined
+        console.log("Gas limit:", tx.gas); // gaslimit
+
+        // Step 5: Verify token price (BHN/ETH).
+        let tokenprice = await contract.tokensforoneether.call();
+        let tokenprice_wei = await contract.tokenprice_wei.call();
+        console.log("Token price (BHN/ETH): ", tokenprice.toNumber())
+        console.log("Token price (WEI): ", tokenprice_wei.toNumber());
+
+
+        // Step 6: Calculate the number of tokens.
+        console.log("Tokens asked: ", (tx.value.toNumber() *
+                                  tokenprice.toNumber()) / 1000000000000000000);
+
+        // Step 7: Verify balances after transaction.
+        let adminBalance = await contract.balanceOf(accounts[0]);
+        console.log("Admin token balance: ", adminBalance.toNumber());
+        let buyerBalance = await contract.balanceOf(accounts[8]);
+        console.log("Buyer token balance: ", buyerBalance.toNumber());
+
+        // Step 8: Check token available and sold (WEI).
+        let tokensSoldCount = await contract.tokensSoldCount_wei.call();
+        let tokensAvailableCount = await contract.tokensAvailableCount_wei.call();
+        console.log("ICO tokens sold: ", tokensSoldCount.toNumber());
+        console.log("ICO tokens available: ", tokensAvailableCount.toNumber());
+
+        // Step 9: Buy again tokensSoldCount, tokensAvailableCount check)                                                       value: amount});
+        hash = await contract.buytokens.sendTransaction({from: accounts[2],
+                                           value: web3.toWei(0.1984, 'ether')});
+
+        tokensSoldCount = await contract.tokensSoldCount_wei.call();
+        tokensAvailableCount = await contract.tokensAvailableCount_wei.call();
         console.log("ICO tokens sold: ", tokensSoldCount.toNumber());
         console.log("ICO tokens available: ", tokensAvailableCount.toNumber());
     });
